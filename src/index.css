@@ -1,0 +1,128 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─── CSS Custom Properties (Dark Mode defaults) ───────────────────────── */
+:root {
+  --bg-main: #0d0f1a;
+  --header-bg: rgba(13, 15, 26, 0.85);
+  --tab-bg: rgba(255, 255, 255, 0.04);
+  --text-primary: #f1f5f9;
+  --text-secondary: #94a3b8;
+}
+
+/* Light Mode */
+html:not(.dark) {
+  --bg-main: #f1f5fb;
+  --header-bg: rgba(241, 245, 251, 0.9);
+  --tab-bg: rgba(0, 0, 0, 0.04);
+  --text-primary: #0f172a;
+  --text-secondary: #334155;
+}
+
+/* ─── Base ─────────────────────────────────────────────────────────────── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  margin: 0;
+  font-family: 'Inter', system-ui, sans-serif;
+  background: var(--bg-main);
+  color: var(--text-primary);
+  transition: background 0.2s, color 0.2s;
+}
+
+/* ─── Light mode adjustments for cards ─────────────────────────────────── */
+html:not(.dark) .bg-white\/5 {
+  background: rgba(255, 255, 255, 0.7) !important;
+}
+
+html:not(.dark) .bg-white\/10 {
+  background: rgba(255, 255, 255, 0.9) !important;
+}
+
+html:not(.dark) .border-white\/10 {
+  border-color: rgba(0, 0, 0, 0.1) !important;
+}
+
+html:not(.dark) .border-white\/15 {
+  border-color: rgba(0, 0, 0, 0.12) !important;
+}
+
+html:not(.dark) .border-white\/20 {
+  border-color: rgba(0, 0, 0, 0.15) !important;
+}
+
+html:not(.dark) .text-gray-400 {
+  color: #475569;
+}
+
+html:not(.dark) .text-gray-500 {
+  color: #64748b;
+}
+
+html:not(.dark) input {
+  background: rgba(255, 255, 255, 0.9) !important;
+  color: #0f172a !important;
+  border-color: rgba(0, 0, 0, 0.15) !important;
+}
+
+/* ─── Scrollbar ─────────────────────────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(99, 102, 241, 0.4);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(99, 102, 241, 0.7);
+}
+
+/* ─── Input number — hide spinners ─────────────────────────────────────── */
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type=number] {
+  -moz-appearance: textfield;
+}
+
+/* ─── Animations ────────────────────────────────────────────────────────── */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(16px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+.animate-slide-up {
+  animation: slideUp 0.35s ease-out;
+}
+
+/* ─── Glassmorphism card ────────────────────────────────────────────────── */
+.glass-card {
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
