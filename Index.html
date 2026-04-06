@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Tax Comparator PRO MAX</title>
+
+<style>
+body {
+  font-family: Arial;
+  background: #0f172a;
+  color: white;
+  padding: 20px;
+}
+.container {
+  max-width: 900px;
+  margin: auto;
+  background: #1e293b;
+  padding: 20px;
+  border-radius: 10px;
+}
+input, select {
+  width: 100%;
+  padding: 8px;
+  margin: 5px 0;
+  border-radius: 5px;
+  border: none;
+}
+button {
+  width: 100%;
+  padding: 12px;
+  margin-top: 10px;
+  background: #38bdf8;
+  border: none;
+  font-weight: bold;
+  cursor: pointer;
+}
+.result {
+  margin-top: 20px;
+  background: #020617;
+  padding: 15px;
+  border-radius: 10px;
+}
+h2 { color: #38bdf8; }
+</style>
+</head>
+
+<body>
+
+<div class="container">
+<h2>💰 Tax Comparator PRO MAX</h2>
+
+<h3>Mode</h3>
+<select id="mode">
+  <option value="yearly">Yearly</option>
+  <option value="monthly">Monthly</option>
+</select>
+
+<h3>Income</h3>
+<input id="basic" placeholder="Basic Salary">
+<input id="hra" placeholder="HRA">
+<input id="specialAllow" placeholder="Special Allowance">
+<input id="bonus" placeholder="Bonus">
+<input id="otherIncome" placeholder="Other Income">
+
+<h3>HRA Details</h3>
+<input id="rent" placeholder="Annual Rent Paid">
+
+<h3>Deductions (Old)</h3>
+<input id="c80" placeholder="80C">
+<input id="d80" placeholder="80D">
+<input id="home" placeholder="Home Loan Interest">
+<input id="npsSelf" placeholder="NPS Self">
+<input id="special" placeholder="Special Deduction">
+<input id="otherDed" placeholder="Other deductions">
+
+<h3>New Regime</h3>
+<input id="npsEmployer" placeholder="Employer NPS">
+
+<button onclick="calculate()">Calculate</button>
+
+<div class="result" id="output"></div>
+</div>
+
+<script>
+function getMultiplier() {
+  return document.getElementById("mode").value === "monthly" ? 12 : 1;
+}
+
+function hraExemption(hra, rent, basic) {
+  let ex = Math.min(hra, rent - 0.1 * basic, 0.5 * basic);
+  return Math.max(0, ex);
+}
+
+function calcSlabsOld(income) {
+  let tax = 0, breakdown = [];
+
+  if (income > 1000000) {
+    let t = (income - 1000000) * 0.30;
+    breakdown.push(`30%: ₹${Math.round(t)}`);
+    tax += t; income = 1000000;
+  }
+  if (income > 500000) {
+    let t = (income - 500000) * 0.20;
+    breakdown.push(`20%: ₹${Math.round(t)}`);
+    tax += t; income = 500000;
+  }
+  if (income > 250000) {
+    let t = (income - 250000) * 0.05;
+    breakdown.push(`5%: ₹${Math.round(t)}`);
+    tax += t;
+  }
+
+  return { tax, breakdown };
+}
+
+function calcSlabsNew(income) {
+  let slabs = [
+    [400000, 0],
+    [800000, 0.05],
+    [1200000, 0.10],
+    [1600000, 0.15],
+    [2000000, 0.20],
+    [2400000, 0.25],
+    [Infinity, 0.30]
+  ];
+
+  let prev = 0, tax = 0, breakdown = [];
+
+  for (let [limit, rate] of slabs) {
+    if (income > prev) {
+      let amt = Math.min(income, limit) - prev;
+      let t = amt * rate;
+      if (rate > 0) breakdown.push(`${rate*100}%: ₹${Math.round(t)}`);
+      tax += t;
+      prev = limit;
+    }
+  }
+
+  return { tax, breakdown };
+}
+
+function applySurcharge(tax, income) {
+  let rate = 0;
+  if (income > 20000000) rate = 0.25;
+  else if (income > 10000000) rate = 0.15;
+  else if (income > 5000000) rate = 0.10;
+
+  let surcharge = tax * rate;
+  return { total: tax + surcharge, surcharge };
+}
+
+function calculate() {
+  let m = getMultiplier();
+
+  let basic = +basic.value * m || 0;
+  let hra = +hra.value * m || 0;
+  let specialAllow = +specialAllow.value * m || 0;
+  let bonus = +bonus.value * m || 0;
+  let otherIncome = +otherIncome.value * m || 0;
+
+  let rent = +rent.value * m || 0;
+
+  let c80 = +c80.value || 0;
+  let d80 = +d80.value || 0;
+  let home = +home.value || 0;
+  let npsSelf = +npsSelf.value || 0;
+  let special = +special.value || 0;
+  let otherDed = +otherDed.value || 0;
+
+  let npsEmployer = +npsEmployer.value || 0;
+
+  let salary = basic + hra + specialAllow + bonus + otherIncome;
+
+  let hraEx = hraExemption(hra, rent, basic);
+  let totalDed = c80 + d80 + home + npsSelf + special + otherDed;
+
+  // OLD
+  let oldTaxable = salary - hraEx - totalDed - 50000;
+  let old = calcSlabsOld(oldTaxable);
+  let oldS = applySurcharge(old.tax, salary);
+  let oldFinal = oldS.total * 1.04;
+
+  // NEW
+  let newTaxable = salary - 75000 - npsEmployer;
+  let nw = calcSlabsNew(newTaxable);
+  let newS = applySurcharge(nw.tax, salary);
+  let newFinal = newS.total * 1.04;
+
+  let winner = oldFinal < newFinal ? "Old Regime" : "New Regime";
+  let diff = Math.abs(oldFinal - newFinal);
+
+  document.getElementById("output").innerHTML = `
+    <b>Old Tax:</b> ₹${Math.round(oldFinal)} <br>
+    Surcharge: ₹${Math.round(oldS.surcharge)} <br><br>
+
+    <b>New Tax:</b> ₹${Math.round(newFinal)} <br>
+    Surcharge: ₹${Math.round(newS.surcharge)} <br><br>
+
+    🏆 Best: <b>${winner}</b><br>
+    💸 Saved: ₹${Math.round(diff)}<br><br>
+
+    <b>Old Breakdown:</b><br>${old.breakdown.join("<br>")}<br><br>
+    <b>New Breakdown:</b><br>${nw.breakdown.join("<br>")}
+  `;
+}
+</script>
+
+</body>
+</html>
